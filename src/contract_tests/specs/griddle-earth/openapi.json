@@ -1,0 +1,689 @@
+{
+  "openapi": "3.0.2",
+  "info": {
+    "title": "FastAPI",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/v1/": {
+      "get": {
+        "summary": "Root",
+        "operationId": "root_v1__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/game": {
+      "post": {
+        "summary": "Create New Game",
+        "operationId": "create_new_game_v1_game_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NewGameResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/game/{game_id}": {
+      "get": {
+        "summary": "Get Game",
+        "description": "Returns the current state of the player including:\n- location\n- direction\n- description of the current scene\n- list of items available to access in scene",
+        "operationId": "get_game_v1_game__game_id__get",
+        "parameters": [
+          {
+            "required": true,
+            "schema": {
+              "title": "Game Id",
+              "type": "integer"
+            },
+            "name": "game_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Game"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/game/{game_id}/map": {
+      "get": {
+        "summary": "Get Game Map",
+        "operationId": "get_game_map_v1_game__game_id__map_get",
+        "parameters": [
+          {
+            "required": true,
+            "schema": {
+              "title": "Game Id",
+              "type": "integer"
+            },
+            "name": "game_id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Map"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/game/{game_id}/command": {
+      "post": {
+        "summary": "Handle Command",
+        "description": "Handles interaction with a scene\nvalidates",
+        "operationId": "handle_command_v1_game__game_id__command_post",
+        "parameters": [
+          {
+            "required": true,
+            "schema": {
+              "title": "Game Id",
+              "type": "integer"
+            },
+            "name": "game_id",
+            "in": "path"
+          },
+          {
+            "required": true,
+            "schema": {
+              "title": "Input",
+              "type": "string"
+            },
+            "name": "input",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ActionOut": {
+        "title": "ActionOut",
+        "required": ["name", "aliases", "description"],
+        "type": "object",
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "aliases": {
+            "title": "Aliases",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "examples": {
+            "title": "Examples",
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "default": []
+          }
+        }
+      },
+      "AdventureLogResponse": {
+        "title": "AdventureLogResponse",
+        "required": ["locationsDiscovered", "itemsDiscovered"],
+        "type": "object",
+        "properties": {
+          "locationsDiscovered": {
+            "title": "Locationsdiscovered",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DiscoveredLocationsByRegion"
+            }
+          },
+          "itemsDiscovered": {
+            "title": "Itemsdiscovered",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DiscoveredItemsByType"
+            }
+          }
+        },
+        "description": "Formatted locations and items discovered"
+      },
+      "CommandResponse": {
+        "title": "CommandResponse",
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/Response"
+          },
+          {
+            "$ref": "#/components/schemas/HelpResponse"
+          },
+          {
+            "$ref": "#/components/schemas/InventoryResponse"
+          },
+          {
+            "$ref": "#/components/schemas/AdventureLogResponse"
+          },
+          {
+            "$ref": "#/components/schemas/RecipeBookResponse"
+          }
+        ]
+      },
+      "Component": {
+        "title": "Component",
+        "required": ["id", "name", "description"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "items": {
+            "title": "Items",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Items"
+            },
+            "default": []
+          },
+          "transports_to": {
+            "$ref": "#/components/schemas/Coordinates"
+          }
+        },
+        "description": "A small part of a location that can be interacted with"
+      },
+      "Coordinates": {
+        "title": "Coordinates",
+        "required": ["x_coordinate", "y_coordinate", "z_coordinate"],
+        "type": "object",
+        "properties": {
+          "x_coordinate": {
+            "title": "X Coordinate",
+            "type": "integer"
+          },
+          "y_coordinate": {
+            "title": "Y Coordinate",
+            "type": "integer"
+          },
+          "z_coordinate": {
+            "title": "Z Coordinate",
+            "type": "integer"
+          }
+        }
+      },
+      "DiscoveredItemsByType": {
+        "title": "DiscoveredItemsByType",
+        "required": ["itemType", "discoverable"],
+        "type": "object",
+        "properties": {
+          "itemType": {
+            "$ref": "#/components/schemas/ItemType"
+          },
+          "discovered": {
+            "title": "Discovered",
+            "type": "integer",
+            "default": 0
+          },
+          "discoverable": {
+            "title": "Discoverable",
+            "type": "integer"
+          }
+        }
+      },
+      "DiscoveredLocationsByRegion": {
+        "title": "DiscoveredLocationsByRegion",
+        "required": ["region", "discoverable"],
+        "type": "object",
+        "properties": {
+          "region": {
+            "$ref": "#/components/schemas/Region"
+          },
+          "discovered": {
+            "title": "Discovered",
+            "type": "integer",
+            "default": 0
+          },
+          "discoverable": {
+            "title": "Discoverable",
+            "type": "integer"
+          }
+        }
+      },
+      "Game": {
+        "title": "Game",
+        "required": ["id", "health_points", "created", "inventory"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "location": {
+            "$ref": "#/components/schemas/Location"
+          },
+          "health_points": {
+            "title": "Health Points",
+            "type": "integer"
+          },
+          "created": {
+            "title": "Created",
+            "type": "string",
+            "format": "date-time"
+          },
+          "inventory": {
+            "$ref": "#/components/schemas/Inventory"
+          }
+        }
+      },
+      "GroupedInventory": {
+        "title": "GroupedInventory",
+        "required": ["itemType", "items"],
+        "type": "object",
+        "properties": {
+          "itemType": {
+            "$ref": "#/components/schemas/ItemType"
+          },
+          "items": {
+            "title": "Items",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ItemsOut"
+            }
+          }
+        }
+      },
+      "HTTPValidationError": {
+        "title": "HTTPValidationError",
+        "type": "object",
+        "properties": {
+          "detail": {
+            "title": "Detail",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            }
+          }
+        }
+      },
+      "HelpResponse": {
+        "title": "HelpResponse",
+        "required": ["actions"],
+        "type": "object",
+        "properties": {
+          "actions": {
+            "title": "Actions",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActionOut"
+            }
+          }
+        }
+      },
+      "Inventory": {
+        "title": "Inventory",
+        "required": ["id"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "items": {
+            "title": "Items",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Items"
+            },
+            "default": []
+          }
+        }
+      },
+      "InventoryResponse": {
+        "title": "InventoryResponse",
+        "required": ["inventory"],
+        "type": "object",
+        "properties": {
+          "inventory": {
+            "title": "Inventory",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GroupedInventory"
+            }
+          }
+        }
+      },
+      "Item": {
+        "title": "Item",
+        "required": [
+          "id",
+          "name",
+          "item_type",
+          "health_points",
+          "collection_method"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "item_type": {
+            "$ref": "#/components/schemas/ItemType"
+          },
+          "health_points": {
+            "title": "Health Points",
+            "type": "integer"
+          },
+          "collection_method": {
+            "$ref": "#/components/schemas/ItemCollectionMethod"
+          }
+        }
+      },
+      "ItemCollectionMethod": {
+        "title": "ItemCollectionMethod",
+        "enum": ["hunt", "forage", "cook"],
+        "type": "string",
+        "description": "An enumeration."
+      },
+      "ItemType": {
+        "title": "ItemType",
+        "enum": [
+          "fruits",
+          "vegetables",
+          "proteins",
+          "grains",
+          "herbs",
+          "meals"
+        ],
+        "type": "string",
+        "description": "An enumeration."
+      },
+      "Items": {
+        "title": "Items",
+        "required": ["id", "item", "quantity"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "item": {
+            "$ref": "#/components/schemas/Item"
+          },
+          "quantity": {
+            "title": "Quantity",
+            "type": "integer"
+          }
+        }
+      },
+      "ItemsOut": {
+        "title": "ItemsOut",
+        "required": ["name", "healthPoints", "quantity"],
+        "type": "object",
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "healthPoints": {
+            "title": "Healthpoints",
+            "type": "integer"
+          },
+          "quantity": {
+            "title": "Quantity",
+            "type": "integer"
+          }
+        }
+      },
+      "Location": {
+        "title": "Location",
+        "required": ["id", "coordinates", "name", "description", "region"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "coordinates": {
+            "$ref": "#/components/schemas/Coordinates"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "region": {
+            "$ref": "#/components/schemas/Region"
+          },
+          "components": {
+            "title": "Components",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Component"
+            },
+            "default": []
+          }
+        }
+      },
+      "LocationOut": {
+        "title": "LocationOut",
+        "required": ["name", "description", "region"],
+        "type": "object",
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "region": {
+            "$ref": "#/components/schemas/Region"
+          }
+        }
+      },
+      "Map": {
+        "title": "Map",
+        "required": ["id"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "locations": {
+            "title": "Locations",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Location"
+            },
+            "default": []
+          }
+        }
+      },
+      "NewGameResponse": {
+        "title": "NewGameResponse",
+        "required": ["id", "message"],
+        "type": "object",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        }
+      },
+      "RecipeBookResponse": {
+        "title": "RecipeBookResponse",
+        "required": ["recipes"],
+        "type": "object",
+        "properties": {
+          "recipes": {
+            "title": "Recipes",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecipeOut"
+            }
+          }
+        }
+      },
+      "RecipeOut": {
+        "title": "RecipeOut",
+        "required": ["name", "description", "boost"],
+        "type": "object",
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "boost": {
+            "title": "Boost",
+            "type": "integer"
+          }
+        }
+      },
+      "Region": {
+        "title": "Region",
+        "enum": ["wetlands", "mountains", "forest", "desert", "grasslands"],
+        "type": "string",
+        "description": "An enumeration."
+      },
+      "Response": {
+        "title": "Response",
+        "required": ["message"],
+        "type": "object",
+        "properties": {
+          "healthPoints": {
+            "title": "Healthpoints",
+            "type": "integer"
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationOut"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        }
+      },
+      "ValidationError": {
+        "title": "ValidationError",
+        "required": ["loc", "msg", "type"],
+        "type": "object",
+        "properties": {
+          "loc": {
+            "title": "Location",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
